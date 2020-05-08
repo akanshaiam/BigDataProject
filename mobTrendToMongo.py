@@ -21,7 +21,7 @@ csvfile = open(mobility_trend_path.replace('"', ''), 'r')
 reader = csv.DictReader(csvfile)
 mongo_client=MongoClient()
 
-db=mongo_client.covid_analytics
+db=mongo_client.covid
 db.segment.drop()
 
 header= [ "iso","country","date","grocery_pharmacy","parks",\
