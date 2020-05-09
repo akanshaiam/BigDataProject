@@ -24,9 +24,10 @@ mongo_client=MongoClient()
 db=mongo_client.covid
 db.segment.drop()
 
-header= [ "iso","country","date","grocery_pharmacy","parks",\
-    "residential","retail_recreation","transit_stations",\
-        "workplaces","total_cases","fatalities"]
+header= [ "country_region_code","country_region","sub_region_1","sub_region_2","date",\
+    "retail_and_recreation_percent_change_from_baseline","grocery_and_pharmacy_percent_change_from_baseline",\
+        "parks_percent_change_from_baseline","transit_stations_percent_change_from_baseline",\
+            "workplaces_percent_change_from_baseline","residential_percent_change_from_baseline"]
 
 for each in reader:
     row={}
