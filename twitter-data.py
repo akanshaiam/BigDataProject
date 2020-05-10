@@ -17,7 +17,9 @@ class StdOutListener(StreamListener):
     def on_data(self, data):
         json_data = json.loads(data)
         new_data = format_twitter_data(json_data)
-        producer.send("COVID19", (str(new_data)).encode('utf-8'))
+        new_str = (json.dumps(new_data)).replace("\'", "\"")
+        #print (new_str)
+        producer.send("COVID19", (new_str).encode('utf-8'))
         #print (data)
         return True
     def on_error(self, status):
