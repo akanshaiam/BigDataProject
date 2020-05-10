@@ -9,7 +9,6 @@ from sparknlp.pretrained import PretrainedPipeline
 from pymongo import MongoClient
 
 
-
 spark = SparkSession.builder \
     .appName("Spark NLP")\
     .master("local[4]")\
@@ -28,9 +27,9 @@ twitter_df = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("da
 print(twitter_df.show(n=2))
 
 
-input=twitter_df.select('id','text').toDF("id","tweet_text")
-print("imput")
-input.show()
+#input=twitter_df.select('id','text').toDF("id","tweet_text")
+#print("imput")
+#input.show()
 
 ##preprocess data - remove hashtags, punctutations , hyperlinks, @symbols,
 
@@ -44,7 +43,8 @@ def cleantext(text):
     return text
 
 udf_fun = udf(lambda text:cleantext(text),StringType())
-preprocessed_text = input.select('id',udf_fun('tweet_text').alias('text'))
+preprocessed_text = twitter_df.select('id',udf_fun('text').alias('text'), 'user')
+
 preprocessed_text.show()
 
 #use pipeline
@@ -54,9 +54,10 @@ result = pipeline.annotate(preprocessed_text,column='text')
 
 #write result to mongodb
 
-cols = ['id','text','sentiment.result']
+cols = ['id','text','sentiment.result', 'user']
 output = result.select(cols)
-output.show()
+#output.show()
+
 
 output.write\
     .format("com.mongodb.spark.sql.DefaultSource") \
