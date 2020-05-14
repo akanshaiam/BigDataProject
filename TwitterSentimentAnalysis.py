@@ -7,6 +7,9 @@ from pyspark.sql.functions import udf
 from pyspark.sql.types import StringType
 from sparknlp.pretrained import PretrainedPipeline
 from pymongo import MongoClient
+from datetime import datetime
+import pytz
+from pyspark.sql.functions import udf, to_date, to_utc_timestamp
 
 
 spark = SparkSession.builder \
@@ -43,7 +46,7 @@ def cleantext(text):
     return text
 
 udf_fun = udf(lambda text:cleantext(text),StringType())
-preprocessed_text = twitter_df.select('id',udf_fun('text').alias('text'), 'user')
+preprocessed_text = twitter_df.select('id',udf_fun('text').alias('text'), 'user', 'created_at')
 
 preprocessed_text.show()
 
@@ -54,13 +57,29 @@ result = pipeline.annotate(preprocessed_text,column='text')
 
 #write result to mongodb
 
-cols = ['id','text','sentiment.result', 'user']
+cols = ['id','text','sentiment.result', 'user', 'created_at']
 output = result.select(cols)
 #output.show()
 
+## Converting date string format
+def getDate(x):
+    if x is not None:
+        return str(datetime.strptime(x,'%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=pytz.UTC).strftime("%Y-%m-%d"))
+    else:
+        return None
 
-output.write\
-    .format("com.mongodb.spark.sql.DefaultSource") \
-    .mode("append") \
-    .option("collection", "sentiment_predicted") \
-    .save()
+## UDF declaration
+date_fn = udf(getDate, StringType())
+
+## Converting datatype in spark dataframe
+output = output.withColumn("created_at", to_utc_timestamp(date_fn("created_at"),"UTC"))
+
+#output = output.withColumn("date_only", func.to_date(func.col("created_at")))
+
+# dfNew.write\
+#     .format("com.mongodb.spark.sql.DefaultSource") \
+#     .mode("append") \
+#     .option("collection", "sentiment_predicted") \
+#     .save()
+
+output.show()
