@@ -17,7 +17,7 @@ df = spark.read\
 
 df.createOrReplaceTempView("mob")
 
-finalStateOutputByDay = spark.sql("select sub_region_1, DAYOFWEEK(date) as day_of_week, avg(retail_and_recreation_percent_change_from_baseline) as avg_retail_and_recreation_percent_change,\
+stateOutputByDay = spark.sql("select sub_region_1, DAYOFWEEK(date) as day_of_week, avg(retail_and_recreation_percent_change_from_baseline) as avg_retail_and_recreation_percent_change,\
   avg(grocery_and_pharmacy_percent_change_from_baseline) as avg_grocery_and_pharmacy_percent_change, \
   avg(parks_percent_change_from_baseline) as avg_parks_percent_change,\
   avg(transit_stations_percent_change_from_baseline) as avg_transit_stations_percent_change,\
@@ -26,22 +26,30 @@ finalStateOutputByDay = spark.sql("select sub_region_1, DAYOFWEEK(date) as day_o
        from mob where country_region_code = \"US\" group by sub_region_1,  DAYOFWEEK(date)")\
       .sort(col("day_of_week"))
 #finalStateOutputByDay.show()
+stateOutputByDay.createOrReplaceTempView("stateOutputByDay")
+finalStateOutputByDay = spark.sql("select day_of_week, avg_retail_and_recreation_percent_change, avg_grocery_and_pharmacy_percent_change, avg_parks_percent_change, avg_transit_stations_percent_change, avg_workplaces_percent_change, avg_residential_percent_change from stateOutputByDay where sub_region_1 = \"New York\"")
 
-finalCityOutputByDay = spark.sql("select sub_region_2, DAYOFWEEK(date) as day_of_week, retail_and_recreation_percent_change_from_baseline\
+
+cityOutputByDay = spark.sql("select sub_region_2, DAYOFWEEK(date) as day_of_week, retail_and_recreation_percent_change_from_baseline\
     grocery_and_pharmacy_percent_change_from_baseline,  parks_percent_change_from_baseline\
     transit_stations_percent_change_from_baseline,  workplaces_percent_change_from_baseline\
     residential_percent_change_from_baseline from mob where country_region_code = \"US\"").sort(col("day_of_week"))
-
+#cityOutputByDay.createOrReplaceTempView("cityOutputByDay")
 #finalCityOutputByDay.show()
+finalCityOutputByDay = spark.sql("select DAYOFWEEK(date) as day_of_week, retail_and_recreation_percent_change_from_baseline, grocery_and_pharmacy_percent_change_from_baseline,  parks_percent_change_from_baseline, transit_stations_percent_change_from_baseline,  workplaces_percent_change_from_baseline, residential_percent_change_from_baseline from mob where country_region_code = \"US\" and sub_region_2 = \"Kings County\"")
 
-finalStateOutputByDay.write\
+stateOutputByDay.write\
     .format("com.mongodb.spark.sql.DefaultSource") \
     .mode("append") \
     .option("collection", "state_by_day") \
     .save()
 
-finalCityOutputByDay.write\
+cityOutputByDay.write\
     .format("com.mongodb.spark.sql.DefaultSource") \
     .mode("append") \
     .option("collection", "city_by_day") \
     .save()
+
+finalStateOutputByDay.write.format('com.databricks.spark.csv').save('C:/Users/Akansha/BidDataRepo/BigDataProject/mycsv.csv', header='true')
+
+finalCityOutputByDay.write.format('com.databricks.spark.csv').save('C:/Users/Akansha/BidDataRepo/BigDataProject/citydata', header='true')
