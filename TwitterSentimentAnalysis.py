@@ -64,7 +64,7 @@ output = result.select(cols)
 ## Converting date string format
 def getDate(x):
     if x is not None:
-        return str(datetime.strptime(x,'%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=pytz.UTC).strftime("%Y-%m-%d"))
+        return str(datetime.strptime(x,'%a %b %d %H:%M:%S +0000 %Y').replace(tzinfo=pytz.UTC).strftime("%Y-%m-%d %H:%M:%S"))
     else:
         return None
 
@@ -74,12 +74,12 @@ date_fn = udf(getDate, StringType())
 ## Converting datatype in spark dataframe
 output = output.withColumn("created_at", to_utc_timestamp(date_fn("created_at"),"UTC"))
 
-#output = output.withColumn("date_only", func.to_date(func.col("created_at")))
+output = output.withColumn("date_only", func.to_date(func.col("created_at")))
 
-# dfNew.write\
-#     .format("com.mongodb.spark.sql.DefaultSource") \
-#     .mode("append") \
-#     .option("collection", "sentiment_predicted") \
-#     .save()
+dfNew.write\
+    .format("com.mongodb.spark.sql.DefaultSource") \
+    .mode("append") \
+    .option("collection", "sentiment_predicted") \
+    .save()
 
-output.show()
+#output.show()
