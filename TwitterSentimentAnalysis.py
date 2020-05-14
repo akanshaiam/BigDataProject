@@ -68,15 +68,21 @@ def getDate(x):
     else:
         return None
 
+def getDateOnly(x):
+    if x is not None:
+        return str(datetime.strptime(x,'%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.UTC).strftime("%Y-%m-%d"))
+    else:
+        return None
+
 ## UDF declaration
 date_fn = udf(getDate, StringType())
 
 ## Converting datatype in spark dataframe
 output = output.withColumn("created_at", to_utc_timestamp(date_fn("created_at"),"UTC"))
 
-output = output.withColumn("date_only", func.to_date(func.col("created_at")))
+#output = output.withColumn("date_only", func.to_date(func.col("created_at")))
 
-dfNew.write\
+output.write\
     .format("com.mongodb.spark.sql.DefaultSource") \
     .mode("append") \
     .option("collection", "sentiment_predicted") \
