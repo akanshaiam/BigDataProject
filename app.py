@@ -9,14 +9,13 @@ mongo = PyMongo(app)
 
 @app.route("/")
 def index():
-    # ob = {'Date':['2009-03-31','2009-03-30'],'High':[18.79,17.76]}
-    # df = pd.DataFrame(data=ob)
-    # chart_data = df.to_dict(orient='records')
-    # chart_data = json.dumps(chart_data, indent=2)
-    # data = {'chart_data': chart_data}
+    df = pd.read_csv('data.csv').drop('Open', axis=1)
+    chart_data = df.to_dict(orient='records')
+    chart_data = json.dumps(chart_data, indent=2)
+    data = {'chart_data': chart_data}
     covid = mongo.db.state.find()
     print(covid)
-    return render_template("index.html")
+    return render_template("index.html", data=data)
 
 
 if __name__ == "__main__":
